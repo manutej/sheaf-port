@@ -1,0 +1,35 @@
+id: kg
+cells_from: "typed_edges_from_schema"   # locator = (src_type, rel, dst_type, edge_id)
+cover_from: "incident_schema_edges"     # only edges present in the graph + schema
+stalk_schema:
+  - src
+  - rel
+  - dst
+  - datatype
+shared_fields:
+  - src
+  - rel
+  - dst
+mediators:
+  - embeddingCacheId
+critical_lenses:
+  - schema_typing
+soft_lenses:
+  - embedding_distance
+oracle: "schema-validate"
+grain: edge
+grain_min: 2
+grain_max: 10000
+min_observed_edges: 1
+three_sheaves:
+  knowledge: "embeddings live here as a soft section, never as shared_fields"
+  capability: "typed edge stalks; Φ on src/rel/dst"
+  conservation: "schema typing"
+forbidden:
+  - train_restriction_maps
+  - accept_on_H1
+  - treat_embedding_as_stalk
+  - invent_edges
+  - treat_free_text_as_stalk
+  - skip_oracle
+  - collapse_three_sheaves

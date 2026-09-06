@@ -1,0 +1,38 @@
+id: corpus
+cells_from: "documents_and_holdings"    # locator = doc#paragraph-id::holding-id
+cover_from: "citation_and_issue_graph"  # pinpoint cites and shared-issue edges only
+stalk_schema:
+  - doc
+  - paragraphId
+  - holdingId
+  - authority
+  - pinpoint
+shared_fields:
+  - holdingId
+  - authority
+  - pinpoint
+mediators:
+  - reporterPrefix
+  - cachedHeadnote
+critical_lenses:
+  - pinpoint_resolves
+  - authority_exists
+soft_lenses:
+  - narrative_fit
+oracle: "citation-resolve"
+grain: holding
+grain_min: 2
+grain_max: 10000
+min_observed_edges: 1
+three_sheaves:
+  knowledge: "opinion prose as evidence[] about a holding"
+  capability: "typed holding stalks; Φ on holdingId/authority/pinpoint"
+  conservation: "pinpoint resolves ∧ authority exists"
+forbidden:
+  - train_restriction_maps
+  - accept_on_H1
+  - treat_embedding_as_stalk
+  - invent_edges
+  - treat_free_text_as_stalk
+  - skip_oracle
+  - collapse_three_sheaves

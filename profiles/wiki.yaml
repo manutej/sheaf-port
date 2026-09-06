@@ -1,0 +1,37 @@
+id: wiki
+cells_from: "pages_and_claims"          # locator = page#claim-id@revision
+cover_from: "wikilink_and_backlink"     # only rendered links + explicit claim refs
+stalk_schema:
+  - page
+  - revision
+  - claimId
+  - sourceId
+shared_fields:
+  - claimId
+  - sourceId
+mediators:
+  - talkPageId
+  - cachedSnippet
+critical_lenses:
+  - citation_integrity
+  - no_orphan_claim
+soft_lenses:
+  - narrative_coverage
+  - style
+oracle: "wikictl measure"
+grain: claim
+grain_min: 2
+grain_max: 10000
+min_observed_edges: 1
+three_sheaves:
+  knowledge: "page prose as evidence[] about a claim"
+  capability: "typed claim stalks; Φ on claimId/sourceId"
+  conservation: "citation integrity ∧ no orphan claim"
+forbidden:
+  - train_restriction_maps
+  - accept_on_H1
+  - treat_embedding_as_stalk
+  - invent_edges
+  - treat_free_text_as_stalk
+  - skip_oracle
+  - collapse_three_sheaves

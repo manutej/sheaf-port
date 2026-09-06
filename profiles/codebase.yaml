@@ -1,0 +1,41 @@
+id: codebase
+cells_from: "python_symbols+files"      # modules, classes, functions; locator = path:qualname
+cover_from: "import_and_call_graph"     # import edges + name-resolved calls; no guessed edges
+stalk_schema:
+  - path
+  - symbol
+  - apiRevision
+  - commit
+  - testId
+shared_fields:
+  - path
+  - symbol
+  - apiRevision
+mediators:
+  - workspacePrefix
+  - generatedLockfileHash
+  - cachedHandle
+critical_lenses:
+  - tests
+  - types
+  - public_api
+soft_lenses:
+  - style
+  - coverage
+oracle: "pytest -q"
+grain: symbol
+grain_min: 2
+grain_max: 10000
+min_observed_edges: 1
+three_sheaves:
+  knowledge: "docstrings and comments as evidence[] about a symbol"
+  capability: "typed symbol stalks; Φ on path/symbol/apiRevision"
+  conservation: "tests ∧ types ∧ public API"
+forbidden:
+  - train_restriction_maps
+  - accept_on_H1
+  - treat_embedding_as_stalk
+  - invent_edges
+  - treat_free_text_as_stalk
+  - skip_oracle
+  - collapse_three_sheaves

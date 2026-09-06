@@ -1,0 +1,29 @@
+# domain.package.yaml — input schema for sheaf-bind
+# Mirrors src/sheaf_port/types.py::DomainPackage
+# A package that fails validation is not a domain.
+
+id: string                    # codebase | wiki | kg | corpus | sensor | custom
+cells_from: string            # locator rule the walker can execute
+cover_from: string            # incidence rule; must cite an observed relation
+stalk_schema: [string]        # typed field names only; no prose blobs
+shared_fields: [string]       # non-empty subset of stalk_schema; glue compares these
+mediators: [string]           # nuisance interiors sheaf-repair may quotient
+critical_lenses: [string]     # deterministic vetoes; never averaged
+soft_lenses: [string]         # judges; rank only
+oracle: string                # executable; glue is not a substitute
+grain: string                 # symbol | claim | edge | holding | custom
+grain_min: int                # default 2
+grain_max: int                # default 10000
+min_observed_edges: int       # default 1
+three_sheaves:
+  knowledge: string           # memory object — not the accept bit
+  capability: string          # what Φ commits
+  conservation: string        # what the dual-loop conserves
+forbidden:
+  - train_restriction_maps
+  - accept_on_H1
+  - treat_embedding_as_stalk
+  - invent_edges
+  - treat_free_text_as_stalk
+  - skip_oracle
+  - collapse_three_sheaves
