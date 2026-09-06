@@ -1,0 +1,13 @@
+{
+  "name": "sheaf-port",
+  "version": "0.1.0",
+  "description": "Port an agent onto a repo, wiki, or connected dataset and only let it write when every part is valid and shared fields match. Typed index, cheap cover, discrete repair, checked ship rule. Tests still run.",
+  "author": {
+    "name": "Manu",
+    "url": "https://github.com/manutej"
+  },
+  "homepage": "https://github.com/manutej/sheaf-port",
+  "repository": "https://github.com/manutej/sheaf-port",
+  "license": "MIT",
+  "keywords": ["agent-harness", "write-gate", "typed-index", "codebase", "wiki", "consistency"]
+}
