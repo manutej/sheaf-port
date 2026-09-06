@@ -3,7 +3,25 @@
 Ninety seconds, then one level deeper. Paper names at the end.
 This page is the concept. The product sentence is in [START.md](../START.md).
 
-## The one idea
+## Ninety seconds
+
+You have something made of pieces that overlap — map sheets, files, wiki pages.
+
+A **graph** only says which pieces are linked.
+A **sheaf** also says:
+
+1. what data lives on each piece (its own record — pieces need not share one shape),
+2. how to read that data on an overlap (usually: keep the fields the overlap names),
+3. whether two linked pieces are compatible: those shared fields match, including type.
+
+If every *observed* overlap is compatible, the local data forms one picture.
+If an import or a wikilink carries `"1"` on one side and `1` on the other, you do not have one picture. You have a named disagreement.
+
+A knowledge graph and an embedding store do not give you that last sentence.
+The lattice is a drawing of this. Teal = compatible. Terracotta = the named disagreement.
+Building the sheaf is not permission to write.
+
+## One level deeper
 
 You already have local truths: a file that type-checks, a page that cites a
 source, a sensor that reports its patch. A sheaf is the extra rule for
@@ -18,17 +36,17 @@ pieces that will not sit on the same map.
 A graph can still be drawn when the comparison fails. A sheaf *records
 the failure* as a first-class fact.
 
-## Three pieces, no more
+### Three pieces, no more
 
 1. **Parts you can open** — a file, a page, a claim. No locator → not a part.
-2. **A record on each part** — fields that part is allowed to carry. Records
-   need not be the same shape. A module’s API is not a paragraph.
+2. **A record on each part** — the fields that live there. Records need not
+   be the same shape. A module’s API is not a paragraph.
 3. **A comparison rule only on overlaps you can point at** — an import, a
    wikilink, a citation. No evidence → not an overlap.
 
 Parts may carry different fields. You only compare what the overlap names.
 
-## The atlas, then the repo
+### The atlas, then the repo
 
 Each map sheet has its own coordinates. Where two sheets cover the same
 ridge, there is a translation between those coordinates. If the
@@ -46,7 +64,7 @@ Same fact in a codebase:
 The string-versus-int detail matters. That is a failed comparison, not a
 small distance.
 
-## What “build a sheaf from this folder” means
+### What “build a sheaf from this folder” means
 
 Name the parts, fill the records, keep only observed overlaps. That
 object *is* the sheaf.
@@ -57,8 +75,6 @@ object *is* the sheaf.
   *are*, so the next folder is indexed the same way.
 - A **write-gate** is one thing you can *do* with a glued assignment.
   Building the sheaf does not, by itself, refuse writes.
-
-## What gluing means
 
 A single picture is an assignment that survives every comparison.
 “Almost glued” is not glued.
