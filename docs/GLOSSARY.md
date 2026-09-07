@@ -1,42 +1,68 @@
-# Engineer glossary
+# Glossary
 
-Lead with the job. Keep the internal name in the last column so skills and tests stay searchable.
+Two layers. **Concept** is what a sheaf is. **Product** is what this repo does with one.
+You can use the left column in public. The right column keeps skills searchable.
 
-| Say this | What it is | Why you should care | Internal name |
+Read [SHEAF.md](SHEAF.md) first if the idea is new. Papers and sibling repos: [REFERENCES.md](REFERENCES.md).
+
+## Concept — the object
+
+| Say this | Meaning, slowly | Why a weaker word is wrong | Paper name |
 |---|---|---|---|
-| **Part** | One addressable unit: a symbol, a claim, an edge, a holding. Has a locator you can open. | If it has no locator it is not in the index. | cell |
-| **Typed record** | The fields the gate reads on that part. | A paragraph, a chunk, or an embedding is evidence *about* the record, not the record. | stalk / section |
-| **Shared fields** | The keys two linked parts must match. | This is the only comparison the gate runs. | restriction ρ, projection |
-| **Observed link** | An import, call, wikilink, FK, citation, or adjacency you can point at in the source. | Invented links are how two domains leak into each other. | edge with evidence |
-| **Valid locally** | The part passes its own membership check. | Necessary, not sufficient. All-green locals still fail if they disagree. | G_v |
-| **Write gate** | Valid locally **and** shared fields match **and** the oracle ran. | Soft scores rank. They do not accept. | Φ + write rule |
-| **Mismatch report** | Which link, which field, left vs right. | Use it to decide what to repair first. Do not treat “report is quiet” as permission to write. | relative H¹ / ledger |
-| **Cheap cover** | The short list of parts that can still disagree. | On a large repo the full check will miss the budget. | Morse core |
-| **Nuisance prefix** | A workspace path, a generated lockfile hash, a cached handle. | Repair may drop it. Repair may not drop a real shared field. | hidden mediator |
-| **Oracle** | The command you already trust: pytest, types, citation resolver. | The gate is not a substitute. If it did not run, the write is refused. | oracles.execute |
-| **Hard check** | Tests, types, public API, citation integrity. Veto. | One red hard check refuses the write, even if four soft checks are green. | critical lens |
-| **Soft check** | Style, coverage, narrative, embedding distance. Rank. | Useful. Never in the accept bit. | soft lens |
-| **Locally-green trap** | Every part looks valid; one shared field is broken. | This is the ship-breaking candidate. The write rule exists to refuse it. | saddle |
-| **Mismatch address** | Which record jumped when the last check failed. | Repair starts here. Blind search is how you “fix” the wrong file. | vanishing cycle |
-| **Memory vs accept vs loop** | Three different questions. Is the wiki internally consistent? May this run write? Did the loop itself hold its invariants? | A green wiki does not ship a red patch. | three sheaves |
-| **Package** | The YAML that teaches bind how to read *this* domain. | Grain, shared fields, oracle command, hard vs soft checks. | domain.package.yaml |
-| **Ported** | Bind succeeded **and** the cheat-sheet battery passed **and** the log is on disk. | YAML without a log is a wish. | adversary log |
-| **No weight updates** | Do not train the agreement rules. | The next domain must be able to audit ρ. Change the package, not the weights. | zero weight |
+| **Part** | One piece with an address you can open: a function, a class, a page, a claim. | A paragraph with no address cannot be checked twice. | cell |
+| **Record on a part** | The local data that piece carries. Different parts may have different fields. A module's API is not a wiki sentence. | Not “a node in one shared vector space.” | stalk / (local) section |
+| **Overlap** | A place two parts both talk about, *and* you can point at the talk in the source (import, wikilink, citation). | “Same folder” is not an overlap. | edge on the cover |
+| **Overlap rule / restriction** | How to read each record on that overlap. In this repo usually: keep the named fields, then compare them, including type. In `scripts/ingest.py` v0: does the named target resolve in the folder? | Not cosine similarity. Not “they mention the same topic.” | restriction map |
+| **One picture / assembles** | Every part is locally fine *and* every observed overlap passes its rule. | Not “average score above a threshold.” | global section |
+| **Fails to glue** | At least one overlap fails the rule. The failure has an address (two locators + a field or a dangling name). | Not “slightly inconsistent.” | obstruction |
+| **Lattice** | A drawing of parts, overlaps, and failed glues. Teal = pass. Terracotta = fail. | A picture of a sheaf, not the sheaf. | explorer / SheafGraph |
+| **Package** | The reusable recipe: what counts as a part, which fields are shared, how overlaps are found. | The structure for the *next* folder. The lattice is *this* folder. | domain.package.yaml / site + coefficients |
 
-## Forbidden translations (these hide a gate)
+One sentence: a sheaf is local records, on addressable parts, with a named rule for each real overlap, so you can tell whether those locals form one whole — or name the overlap that failed.
 
-| Do not say | Because |
+## Product — this repo
+
+| Say this | Meaning | Why you should care | Internal name |
+|---|---|---|---|
+| **Typed index** | The sheaf as files: parts, records, observed overlaps. | This is what “create a sheaf” emits. | bound sheaf |
+| **Reusable structure** | The package. Same field names on a sibling folder. | Meta-suite half: structure for the category, instance for this run. | domain.package.yaml |
+| **Ingest** | Walk a folder and write the index + lattice + package. | Out-of-box command: `python scripts/ingest.py <folder> --out ./out` | sheaf-ingest |
+| **Write gate** | Optional later use: refuse a write unless the index assembles *and* tests ran. | Not the definition of sheaf. | Φ + write rule |
+| **Valid locally** | This one part passes its own check. | Necessary, not sufficient. | G_v |
+| **Mismatch report** | Which overlap, which field, left vs right. | Ranks what to fix. Does not approve a write. | relative H¹ |
+| **Skip parts that already match** | Do not re-check pairs that cannot be the break. | Budget on a large folder. | Morse reduction |
+| **Oracle** | The command you already trust (pytest, a citation checker). | The index is not a substitute. | oracles.execute |
+| **Hard check** | Tests, types, public API. Veto. | One red veto refuses a write. | critical lens |
+| **Soft check** | Style, coverage, embedding distance. Rank only. | Never the yes/no. | soft lens |
+| **Locally-green trap** | Every part looks fine; one overlap is broken. | The case a score will miss. | saddle |
+| **Ported** | Index built *and* a cheat-sheet battery passed *and* the log is on disk. | A YAML file is not a port. | adversary log |
+
+## Colour on the lattice
+
+| You see | v0 ingest means | Later write-gate means |
+|---|---|---|
+| Teal edge | The import or markdown link resolves inside the folder | Shared field values match, including type |
+| Terracotta edge | The named target is missing | Those values do not match |
+| Node | One part with a locator | Same |
+| Ring / `known: true` | Pinned — do not “smooth” it away | Same |
+
+Energy is a hint. It is never permission to write.
+
+## Do not say these
+
+| Phrase | What it hides |
 |---|---|
-| “Consistency score passed” | Scores are not the write gate. |
-| “The embeddings glued” | Distance is a soft check. |
-| “The wiki is consistent, ship the patch” | Memory ≠ accept. |
-| “We can skip tests; the index is clean” | Oracle skip is a ship-blocker. |
-| “Link everything to be safe” | Invented links are a ship-blocker. |
-| “A chunk is good enough as a part” | Free text is not a typed record. |
+| “It’s just a knowledge graph.” | Drops per-part records and the overlap rule. |
+| “The embeddings glued.” | Replaces the overlap rule with a distance. |
+| “The lattice *is* the sheaf.” | Confuses the picture with the structure. |
+| “Consistency score passed.” | Replaces assemble / fail with an average. |
+| “The wiki is consistent, so ship.” | Memory of the source is not a write decision. |
+| “A chunk is a part.” | No locator, no record, no overlap rule. |
+| “Link everything to be safe.” | Invented overlaps are not overlaps. |
+| “It’s teal, merge it.” | Colour is not the write-gate. |
 
-## One worked sentence per domain
+## Worked sentences
 
-- **Codebase.** “auth and api both carry `apiRevision`; one is `"1"` and one is `1`; write refused until they match and pytest ran.”
-- **Wiki.** “Two pages share `claimId` C; only one still carries `sourceId` S; write refused until the citation is restored and `wikictl measure` ran.”
-- **KG.** “The forward edge and the inverse do not share `(src, rel, dst)` after schema validation; write refused.”
-- **Corpus.** “Holding H cites pinpoint P; the authority table cannot resolve P; write refused.”
+- **Code.** `api.py` says `from auth import login`. If `auth.login` is in the folder, that overlap is teal. If it is not, terracotta — and the edge names the missing target.
+- **Wiki.** A page links to `sources.md`. If that file exists, teal. If the link is `sources.md` and the file was renamed, terracotta.
+- **Later gate.** `auth` exports `apiRevision` as `"1"` and `api` reads it as `1`. Each file is locally fine. The overlap fails on type. Tests still have to run.
