@@ -2,147 +2,172 @@
 
 **sheaf-port**
 
-Port a coding agent onto a repo, a wiki, or any other connected dataset —
-and only let it write when every part agrees on the fields they share.
+Take a folder. Build a typed index. Draw it as a lattice.
+Leave a structure you can run on the next folder.
 
-![core](https://img.shields.io/badge/core-8_skills-E2B65A?style=flat-square&labelColor=0C0B0A)
-![gate](https://img.shields.io/badge/write_gate-agree_%2B_valid-43C9BC?style=flat-square&labelColor=0C0B0A)
-![oracle](https://img.shields.io/badge/tests-still_run-43C9BC?style=flat-square&labelColor=0C0B0A)
-![clear](https://img.shields.io/badge/principle-clear_%3E_clever-E2B65A?style=flat-square&labelColor=0C0B0A)
-![license](https://img.shields.io/badge/license-MIT-39C5BB?style=flat-square&labelColor=0C0B0A)
-
-**[Why](#why-this-exists) · [What you get](#what-you-get) · [The write rule](#the-write-rule) · [Install](#install) · [See it](#see-it-the-aha-view) · [For engineers](docs/GLOSSARY.md)**
+[Start](START.md) · [Handoff](HANDOFF.md) · [For agents](AGENTS.md) · [What a sheaf is](docs/SHEAF.md) · [Glossary](docs/GLOSSARY.md)
 
 </div>
 
 ---
 
-## Why this exists
+## Copy this
 
-Agents fail in a boring way. Each piece looks fine on its own — the test file is green, the wiki page reads well, the API stub type-checks — and the *combination* is wrong. A path is a string in one module and an int handle in another. A claim on page A cites a source that page B dropped. The agent averages the greens and ships.
-
-**sheaf-port is a write gate for that failure.**
-
-It indexes your project as typed records (not paragraphs, not embeddings). It only compares the fields two parts actually share. It writes if and only if every part is valid *and* those shared fields match *and* your real checks still ran (tests, types, citation resolver). A pretty consistency score is not enough.
-
-That is the whole product. The rest of the plugin is how you attach this gate to a repo, a wiki, a knowledge graph, or a legal corpus without rewriting the agent.
-
-## What you get
-
-| You run | What happens |
-|---|---|
-| `/sheaf-port <package.yaml>` | Build a typed index of the domain. Refuse mystery chunks and invented links. |
-| `/morse-reduce` | Drop checks that cannot disagree, so the gate stays cheap on a big repo. |
-| `/phi-check` | Ask “does everything agree?” No repair. No write. |
-| `/sheaf-run` | Propose → fix disagreements → write only if the gate passes → record a discrete lesson. |
-
-Eight core skills do the work. Four of them already live in [ceti-explainer](https://github.com/manutej/ceti-explainer). Four are new in this repo: **bind**, **reduce**, **operator**, **adversary**.
-
-The new ones, in engineer English:
-
-| Skill | Invoke | What it emits |
-|---|---|---|
-| **bind** | `/sheaf-port` | A typed index: parts, shared fields, observed links only. |
-| **reduce** | `/morse-reduce` | The short list of parts that can still disagree. |
-| **harness** | `/sheaf-run` | The loop + the write rule. |
-| **adversary** | (CI) | A log that says the domain is actually wired, not just described. |
-
-## The write rule
-
-```
-write  ⇔  every part is valid
-       ∧  shared fields match
-       ∧  hard checks passed     (tests, types, public API, …)
-       ∧  the real oracle ran    (pytest, wikictl, citation-resolve)
-       ∧  the work moved forward
-```
-
-Soft scores (style, coverage, embedding distance) may *rank* candidates. They may not accept one.
-
-The failure this rule exists to catch: four soft checks green, one shared field broken. That candidate looks like a local minimum and is a global contradiction. Refuse it.
-
-## A domain is just a package
-
-One YAML file tells bind how to read *your* source. Four profiles ship:
-
-| Profile | A “part” is | Shared fields | The oracle |
-|---|---|---|---|
-| `profiles/codebase.yaml` | a symbol | path, symbol, apiRevision | `pytest -q` |
-| `profiles/wiki.yaml` | a claim | claimId, sourceId | `wikictl measure` |
-| `profiles/kg.yaml` | a typed edge | src, rel, dst | schema validator |
-| `profiles/corpus.yaml` | a holding | holdingId, authority, pinpoint | citation resolver |
-
-A bag of unrelated files is not a domain. Empty shared fields fail bind. Links bind did not observe in the source are refused.
-
-## See it — the Aha view
-
-Do not draw a second graph library. Export the bound index into [stalks-and-sections](https://github.com/manutej/stalks-and-sections) and read it on the lattice that already exists.
-
-| You see | It means |
-|---|---|
-| A node | One part, with its own typed record |
-| Node size | How many fields that record has |
-| A teal edge | The two parts agree on every shared field |
-| A terracotta edge | They disagree — this is the thing you fix |
-| A ring | A fact the reducer is not allowed to drop |
-
-`residualMeaning` is a sentence in *your* domain (“auth and api disagree on apiRevision type”), never “the residual of the coboundary.”
-
-Export contract: [`docs/AHA-VIEW.md`](docs/AHA-VIEW.md).
-
-## Install
+Sanity check on this repo (should print 6 parts, 4 teal links):
 
 ```bash
 git clone https://github.com/manutej/sheaf-port
 cd sheaf-port
-pip install -e ".[dev]"
-PYTHONPATH=src python -m sheaf_port adversary
-PYTHONPATH=src python -m pytest tests -q
+python scripts/ingest.py fixtures/codebase --out ./out
+cat out/STRUCTURE.md
 ```
 
-Plugin install (Claude / Grok):
+Point it at **their** repo:
 
 ```bash
-/plugin marketplace add manutej/sheaf-port
-/plugin install sheaf-port@sheaf-port
+python scripts/ingest.py /path/to/their/repo --out ./out-their-repo
 ```
 
-Then `/sheaf-port profiles/codebase.yaml` on a repo, or `/sheaf-run` once an index exists.
+Paste this to another model that can read files:
 
-## Design promises
+```
+You are reading github.com/manutej/sheaf-port.
+Read AGENTS.md, then skills/sheaf-ingest/SKILL.md, then HANDOFF.md.
+Target folder: <PATH OR CLONE URL>
+Run: python scripts/ingest.py <TARGET> --out ./out
+Do not invent links. Do not treat README paragraphs as parts.
+Return the four files under ./out and quote STRUCTURE.md.
+```
 
-Same four as [meta-suite](https://github.com/manutej/meta-suite):
+No pip. Python 3.11+. Stdlib only.
 
-- **Self-contained.** The write gate runs from this repo. The 3D lattice is optional and already built next door.
-- **Never interrogates.** Bind infers what it can from the package; it states assumptions and proceeds.
-- **Clear over clever.** User-facing pages use engineer words. The algebra lives in `skills/*/references/` and in [ceti-explainer](https://github.com/manutej/ceti-explainer).
-- **It compounds.** A passed adversary log is how the next domain starts ahead of the last.
+## What you just built
+
+<figure>
+<svg viewBox="0 0 920 220" width="100%" role="img" aria-label="Folder becomes four files">
+  <rect x="8" y="70" width="150" height="80" rx="10" fill="#F4EFE6" stroke="#2C2A28"/>
+  <text x="83" y="116" text-anchor="middle" font-size="14" font-family="ui-sans-serif,system-ui" fill="#2C2A28">folder</text>
+  <path d="M168 110 H214" stroke="#2C2A28" stroke-width="2" marker-end="url(#a)"/>
+  <rect x="220" y="70" width="190" height="80" rx="10" fill="#E7F6F3" stroke="#2A9D8F"/>
+  <text x="315" y="108" text-anchor="middle" font-size="13" font-family="ui-sans-serif,system-ui" fill="#2C2A28">scripts/ingest.py</text>
+  <text x="315" y="128" text-anchor="middle" font-size="11" font-family="ui-sans-serif,system-ui" fill="#5C5854">parts + observed links</text>
+  <path d="M418 110 H464" stroke="#2C2A28" stroke-width="2"/>
+  <rect x="470" y="16" width="200" height="44" rx="8" fill="#FAF7F2" stroke="#2C2A28"/>
+  <text x="570" y="44" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">out/STRUCTURE.md</text>
+  <rect x="470" y="68" width="200" height="44" rx="8" fill="#FAF7F2" stroke="#2C2A28"/>
+  <text x="570" y="96" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">out/index.json</text>
+  <rect x="470" y="120" width="200" height="44" rx="8" fill="#E7F6F3" stroke="#2A9D8F"/>
+  <text x="570" y="148" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">out/lattice.json</text>
+  <rect x="470" y="172" width="200" height="44" rx="8" fill="#FAF7F2" stroke="#2C2A28"/>
+  <text x="570" y="200" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">out/domain.package.yaml</text>
+  <rect x="700" y="70" width="200" height="80" rx="10" fill="#F8E7E1" stroke="#C65D3B"/>
+  <text x="800" y="108" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">drop lattice.json into</text>
+  <text x="800" y="128" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui">stalks-and-sections</text>
+  <defs><marker id="a" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8" fill="#2C2A28"/></marker></defs>
+</svg>
+<figcaption>Human summary first. Lattice is optional. Package is what you reuse.</figcaption>
+</figure>
+
+| File | Open it when |
+|---|---|
+| `out/STRUCTURE.md` | You want the rebuild command and the teal / terracotta counts |
+| `out/index.json` | An agent needs counts without the drawing |
+| `out/lattice.json` | You want the picture next door |
+| `out/domain.package.yaml` | You will run the same recipe on a sibling folder |
+
+## What the colours mean
+
+<figure>
+<svg viewBox="0 0 920 160" width="100%" role="img" aria-label="Teal means resolved, terracotta means missing">
+  <rect x="20" y="30" width="200" height="70" rx="10" fill="#FAF7F2" stroke="#2C2A28"/>
+  <text x="120" y="72" text-anchor="middle" font-size="14" font-family="ui-sans-serif,system-ui">api.py</text>
+  <path d="M230 65 H390" stroke="#2A9D8F" stroke-width="6"/>
+  <rect x="400" y="30" width="200" height="70" rx="10" fill="#FAF7F2" stroke="#2C2A28"/>
+  <text x="500" y="72" text-anchor="middle" font-size="14" font-family="ui-sans-serif,system-ui">auth.login</text>
+  <text x="310" y="24" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui" fill="#2A9D8F">teal — import resolves</text>
+  <rect x="20" y="120" width="880" height="28" rx="6" fill="#F8E7E1"/>
+  <text x="460" y="139" text-anchor="middle" font-size="12" font-family="ui-sans-serif,system-ui" fill="#C65D3B">terracotta — the named target is not in the folder (read the edge evidence)</text>
+</svg>
+<figcaption>v0 teal is “target exists here.” It is not permission to merge.</figcaption>
+</figure>
+
+```mermaid
+flowchart LR
+  A["Target folder"] --> B["scripts/ingest.py"]
+  B --> C["parts with locators"]
+  C --> D["overlaps with evidence"]
+  D --> E{"target in folder?"}
+  E -->|yes| F["teal edge"]
+  E -->|no| G["terracotta edge"]
+  F --> H["lattice.json + package"]
+  G --> H
+```
+
+## How an agent should do it
+
+1. Read this repo first, in this order: `AGENTS.md` → `skills/sheaf-ingest/SKILL.md` → `HANDOFF.md`.
+2. Take the **target** path the user named. Do not ingest `node_modules`, `.git`, or `dist`.
+3. Run `python scripts/ingest.py <TARGET> --out ./out`.
+4. If that script is missing, walk with list / read / grep and still emit the same four files. No invented links.
+5. Quote `out/STRUCTURE.md`. Stop.
+
+Longer copy-paste: [AGENT-PROMPT.md](AGENT-PROMPT.md).
+
+## What a sheaf adds (one screen)
+
+A **graph** says which pieces are linked.
+
+A **sheaf** also says what data lives on each piece, how to read that data on an overlap, and whether the overlap holds.
+
+```mermaid
+flowchart TB
+  subgraph graph["Graph"]
+    G1[parts] --- G2[links]
+  end
+  subgraph sheaf["Sheaf"]
+    S1[parts with locators] --> S2[record on each part]
+    S2 --> S3[overlap rule]
+    S3 --> S4[one picture or a named miss]
+  end
+```
+
+Four words to keep apart: **sheaf** (the object) · **lattice** (the picture) · **package** (the reusable rule) · **write-gate** (optional, later).
+
+Longer: [docs/SHEAF.md](docs/SHEAF.md). Words: [docs/GLOSSARY.md](docs/GLOSSARY.md).
+
+## What the walker covers
+
+| Source | What becomes a part | What becomes an overlap |
+|---|---|---|
+| `.py` | modules, functions, classes | `import` / `from X import Y` |
+| `.md` | pages | `[text](path)` and `[[page]]` |
+| `.ts` `.js` `.tsx` `.jsx` | files + exported names | relative `import … from './x'` |
+
+Cap 120 parts. Package imports (`json`, `react`) are *not* nodes — they are not in the folder. Relative imports that miss are terracotta.
+
+TypeScript monorepos that need pooling: [stalks-and-sections](https://github.com/manutej/stalks-and-sections) `npm run sheaf:ingest`. Still keep `domain.package.yaml` from this run.
 
 ## What this is not
 
-- Not a vector store with extra vocabulary.
-- Not a replacement for your test runner.
-- Not a claim that the model “understands sheaves.” The gate is a runtime check.
-- Not a CETI film tool. CETI skills can sit *on* the loop after a domain is bound.
-
-## Honesty
-
-The accept bit is a contract we check at run time, not a theorem about the sampler. A related experiment on SWE-bench did not show a discovery advantage (118 vs 116, p = 0.75). We ship the invariance mechanism — typed records, shared-field checks, discrete repair — and we do not advertise a score lift we did not earn.
+- Not a write-gate. That is a later check, if you ask for one.
+- Not “the folder is ported.”
+- Not “it is teal, so merge.”
+- Not a knowledge graph with extra words.
+- Not `pip install` then `python -m sheaf_port`. Use `scripts/ingest.py`.
 
 ## Layout
 
 ```
 sheaf-port/
-├── skills/                 bind, reduce, harness, adversary (SKILL.md)
-├── profiles/               codebase, wiki, kg, corpus
-├── schemas/                domain.package.yaml
-├── src/sheaf_port/         reference runtime + write rule
-├── tests/                  ship-blocker battery
-├── docs/                   WHY, glossary, Aha-view contract
-├── eval/battery.yaml       what “ported” means
-└── plugin.json
+├─ START.md HANDOFF.md AGENTS.md AGENT-PROMPT.md
+├─ scripts/ingest.py          ← run this
+├─ skills/sheaf-ingest/       ← LLM procedure
+├─ docs/SHEAF.md GLOSSARY.md REFERENCES.md
+├─ fixtures/codebase          ← 6-part sanity check
+├─ profiles/                  starting packages
+└─ src/sheaf_port/            reference runtime (lags the script)
 ```
 
 ## License
 
-MIT © 2026 Manu. See [LICENSE](LICENSE).
+MIT © 2026 Manu.
