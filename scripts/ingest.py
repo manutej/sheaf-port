@@ -32,6 +32,7 @@ CAP = 120
 
 
 def iter_files(root: Path, suffixes: set[str]) -> list[Path]:
+    root_real = root.resolve()
     out = []
     for path in root.rglob("*"):
         if not path.is_file():
@@ -39,6 +40,9 @@ def iter_files(root: Path, suffixes: set[str]) -> list[Path]:
         if path.suffix.lower() not in suffixes:
             continue
         if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        # Stay inside the ingest root (symlink escape guard).
+        if not path.resolve().is_relative_to(root_real):
             continue
         out.append(path)
     return out
@@ -52,7 +56,14 @@ def module_name(path: Path, root: Path) -> str:
     return ".".join(parts) if parts else path.stem
 
 
-def ingest(root: Path, cap: int = CAP) -> dict:
+def ingest(
+    root: Path,
+    cap: int = CAP,
+    *,
+    lattice_id: str | None = None,
+    lattice_title: str | None = None,
+    swarm_status: bool = False,
+) -> dict:
     root = root.resolve()
     if not root.is_dir():
         raise SystemExit(f"not a folder: {root}")
@@ -354,12 +365,40 @@ def ingest(root: Path, cap: int = CAP) -> dict:
 
     teal = sum(1 for e in dedup if e["residual"] == 0)
     terra = sum(1 for e in dedup if e["residual"] > 0)
+    slug = lattice_id or (re.sub(r"[^a-z0-9._-]+", "-", root.name.lower()) or "folder")
+    folder_label = lattice_id or root.name
+    title = lattice_title if lattice_title is not None else f"{root.name} index"
+    rebuild_parts = ["python", "scripts/ingest.py", root.name, "--out", "./out"]
+    if lattice_id:
+        rebuild_parts.extend(["--id", lattice_id])
+    if lattice_title is not None:
+        rebuild_parts.extend(["--title", lattice_title])
+    if swarm_status:
+        rebuild_parts.append("--swarm-status")
+    rebuild_cmd = " ".join(rebuild_parts)
+
+    def edge_payload(e: dict) -> dict:
+        out = {
+            "source": e["source"],
+            "target": e["target"],
+            "relation": e["relation"],
+            "restrictKind": e["restrictKind"],
+            "residual": e["residual"],
+            "note": e["note"],
+            "evidence": e["evidence"],
+        }
+        if swarm_status:
+            out["x-swarm"] = {
+                "status": "strange" if e["residual"] == 0 else "broken",
+            }
+        return out
+
     lattice = {
-        "id": re.sub(r"[^a-z0-9._-]+", "-", root.name.lower()) or "folder",
-        "title": f"{root.name} index",
+        "id": slug,
+        "title": title,
         "kicker": f"{len(nodes)} parts · {len(dedup)} observed links · {teal} teal · {terra} terracotta",
         "blurb": (
-            f"Typed index of {root}. A node is a module, symbol, or page you can open. "
+            f"Typed index of {folder_label}. A node is a module, symbol, or page you can open. "
             "Teal = the import or link resolves inside this folder. "
             "Terracotta = it does not."
         ),
@@ -385,20 +424,9 @@ def ingest(root: Path, cap: int = CAP) -> dict:
             }
             for n in nodes.values()
         ],
-        "edges": [
-            {
-                "source": e["source"],
-                "target": e["target"],
-                "relation": e["relation"],
-                "restrictKind": e["restrictKind"],
-                "residual": e["residual"],
-                "note": e["note"],
-                "evidence": e["evidence"],
-            }
-            for e in dedup
-        ],
+        "edges": [edge_payload(e) for e in dedup],
         "rebuild": {
-            "command": f"python scripts/ingest.py {root} --out ./out",
+            "command": rebuild_cmd,
             "kind": kind,
             "shared_fields": ["path", "symbol", "module"],
         },
@@ -505,8 +533,21 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("folder")
     p.add_argument("--out", default="out")
     p.add_argument("--cap", type=int, default=CAP)
+    p.add_argument("--id", dest="lattice_id", metavar="slug", help="Lattice id (default: folder name)")
+    p.add_argument("--title", dest="lattice_title", help="Lattice title (default: '<folder> index')")
+    p.add_argument(
+        "--swarm-status",
+        action="store_true",
+        help="Tag edges with x-swarm status strange|broken from residuals (never ok)",
+    )
     args = p.parse_args(argv)
-    result = ingest(Path(args.folder), cap=args.cap)
+    result = ingest(
+        Path(args.folder),
+        cap=args.cap,
+        lattice_id=args.lattice_id,
+        lattice_title=args.lattice_title,
+        swarm_status=args.swarm_status,
+    )
     paths = write_bundle(result, Path(args.out))
     print(json.dumps({
         "kind": result["kind"],
