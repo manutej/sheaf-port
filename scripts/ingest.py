@@ -32,6 +32,7 @@ CAP = 120
 
 
 def iter_files(root: Path, suffixes: set[str]) -> list[Path]:
+    root_real = root.resolve()
     out = []
     for path in root.rglob("*"):
         if not path.is_file():
@@ -39,6 +40,9 @@ def iter_files(root: Path, suffixes: set[str]) -> list[Path]:
         if path.suffix.lower() not in suffixes:
             continue
         if any(part in SKIP_DIRS for part in path.parts):
+            continue
+        # Stay inside the ingest root (symlink escape guard).
+        if not path.resolve().is_relative_to(root_real):
             continue
         out.append(path)
     return out
